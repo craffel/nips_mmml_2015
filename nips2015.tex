@@ -69,7 +69,7 @@ Because the constraints and requirements of a sequence retrieval problem can var
 In particular, if sequences are very long and high-dimensional, mapping sequences to shorter, lower-dimensional sequences such that similarity is preserved would provide quadratic speed gains when comparing sequences with DTW.
 Motivated by this possibility, in \cite{raffel2015large} we developed a system with the following capabilities:
 \begin{description}[topsep=1pt,itemsep=-1pt,leftmargin=10pt]
-\item[Maps to a Hamming space:] By replacing continuous-valued feature vectors with bitvectors in an embedded Hamming space, computing the distance between a pair of feature vectors simplifies to a single exclusive-or and a table lookup: The exclusive-or of two bitvectors $a$ and $b$ will yield a bitvector consisting of $1$s where $a$ and $b$ differ and $0$s elsewhere, and the number of $1$s in all bitvectors of length $D$ can be precomputed and stored in a table of size $2^D$.  
+\item[Maps to a Hamming space:] By replacing continuous-valued feature vectors with bitvectors in an embedded Hamming space, computing the distance between a pair of feature vectors simplifies to a single exclusive-or and a table lookup: The exclusive-or of two bitvectors $a$ and $b$ will yield a bitvector consisting of $1$s where $a$ and $b$ differ and $0$s elsewhere, and the number of $1$s in all bitvectors of length $D$ can be precomputed and stored in a table of size $2^D$.
 \item[Downsamples sequences:] Rather than creating a one-to-one correspondence between the original featured vectors and mapped bitvectors, groups of subsequent feature vectors are mapped to a single bitvector, giving a quadratic increase in efficiency.
 \item[Preserves similarity:] The system is trained with an objective which seeks to produce a mapping where aligned feature vectors from matching sequences have a small Hamming distance in the embedded space, and non-matched feature vectors have a large distance.
 \item[Learns its representation:] Our approach is entirely data-driven, which allows it to adapt to different problem settings including multimodal data, as we show in Section \ref{sec:multimodal}.
@@ -97,25 +97,25 @@ Ideally, the DTW distance between the original sequences will be well-approximat
 Overviews of DTW and its calculation can be found in \cite{muller2007dynamic, rakthanmanon2012searching} and \cite{raffel2015large} \S 2.2.
 
 \subsection{MIDI to Audio Matching Experiment}
+\label{sec:hashing}
 
 We tested the effectiveness of this approach on the task of matching synthetically generated renditions of pieces of music to recordings of the same pieces in a large database of audio recordings.
 For the first modality, synthetic recordings of music were obtained by using the \texttt{fluidsynth} program to synthesize musical scores in the form of MIDI files, a widely used format for transcribing music.
 For the second, we used audio recordings from the Million Song Dataset (MSD) \cite{bertin2011million,schindler2012facilitating}.
 The goal was therefore to efficiently match a synthetic rendition to its original recording among the million recordings in the MSD.
-For both modalities, we used feature vectors of log-magnitude, constant-Q (i.e.\ log-frequency) spectra with 48 frequency bins from 130 to 1047 Hz. 
+For both modalities, we used feature vectors of log-magnitude, constant-Q (i.e.\ log-frequency) spectra with 48 frequency bins from 130 to 1047 Hz.
 To normalize differences in tempo, we estimated beat locations and computed spectrograms (sequences of spectra) on a timescale where each spectrum corresponded to the span of an estimated beat.
 An example of this representation can be seen in Figure \ref{fig:sims_and_dtws}(a).
-MIDI and audio analyses were performed with \texttt{pretty\char`_midi} \cite{raffel2014pretty_midi} and \texttt{librosa} \cite{mcfee2015librosa,mcfee2015librosa_scipy} respectively. 
+MIDI and audio analyses were performed with \texttt{pretty\char`_midi} \cite{raffel2014pretty_midi} and \texttt{librosa} \cite{mcfee2015librosa,mcfee2015librosa_scipy} respectively.
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{sims_and_dtws.pdf}
-  \caption{Example audio spectrogram, MIDI piano roll, their corresponding hash sequences and the hash sequence distance matrix (cf.\ \cite{raffel2015large} Figure 2).
-       (a) Normalized beat-synchronous constant-Q spectrogram of an audio recording, with frequency in Hz on the vertical axis and beat index on the horizontal axis.
-	   (b) Piano roll matrix for a transcription of the same song, with notes on the vertical axis and beat indices on the horizontal axis.
-	   (c) Resulting hash sequence for the audio spectrogram, with pooled beat indices and Hamming space dimension on the horizontal and vertical axes respectively.
-	   (d) Hash sequence for the MIDI piano roll.
-	   (e) Pairwise distance matrix and DTW-based alignment path (displayed as a white dotted line) for hash sequences.  Darker cells indicate smaller distances.}
+  \caption{Example audio spectrogram and MIDI piano roll and their corresponding hash sequences (cf.\ \cite{raffel2015large} Figure 2).
+  (a) Normalized beat-synchronous constant-Q spectrogram of an audio recording, with frequency in Hz on the vertical axis and beat index on the horizontal axis.
+  (b) Piano roll matrix for a transcription of the same song, with notes on the vertical axis and beat indices on the horizontal axis.
+  (c) Resulting hash sequence for the audio spectrogram, with pooled beat indices and Hamming space dimension on the horizontal and vertical axes respectively.
+  (d) Hash sequence for the MIDI piano roll.}
   \label{fig:sims_and_dtws}
 \end{figure}
 
@@ -130,7 +130,7 @@ Our model was implemented using \texttt{theano} \cite{bastien2012theano,bergstra
 
 For training data, we assembled a collection of MIDI files which were determined to be high-quality transcriptions of corresponding audio recordings.
 We held out 10\% of this training set as a validation set, which was used to estimate the performance of our networks for early stopping and hyperparameter tuning, described below.
-We normalized all input feature vectors by their $L^2$-norm, then z-scored (standardized) feature vectors according to the statistics of the training set.  
+We normalized all input feature vectors by their $L^2$-norm, then z-scored (standardized) feature vectors according to the statistics of the training set.
 Training data was presented to the network as minibatches of 50 randomly-cropped length-100 subsequences.
 To train the networks, we backpropagated the gradient of $\mathcal{L}$ through the networks' parameters and used RMSProp for optimization \cite{tieleman2012lecture}.
 After each 100 minibatches, we tested whether the loss $\mathcal{L}$ computed on the validation set was was less than $99\%$ of the previous lowest; if it was, we trained for 1000 more iterations (minibatches).
@@ -145,7 +145,7 @@ After training a model which effectively maps sequences of feature vectors to sh
 For each MIDI file in our test set, we computed its hash sequence representation and the resulting DTW distance to every hash sequence of every audio recording in the MSD.
 To measure performance, we then ranked MSD entries according to their hash sequence DTW distance and determined the rank of the correct match.
 In our test set of 1,537 pairs, our system achieved a mean reciprocal rank of $0.241$, indicating that the correct match tended to be ranked highly.
-To further measure performance, we report the percentage of MIDI files in the test set where the correct match in the MSD ranked below a certain threshold for various thresholds in Table \ref{tab:rank-percentages}.
+To further measure performance, we report the percentage of MIDI files in the test set where the correct match in the MSD ranked below a certain threshold for various thresholds in Table \ref{tab:rank-percentages}(a).
 
 As can be seen from this table, the correct entry in the MSD only had the smallest distance about 15.2\% of the time, which suggests that this approach cannot reliably used in isolation.
 However, because it was able to rank the correct entry in the top 1\% of the MSD (corresponding to 10,000 entries) 95.9\% of the time, it can instead be used as an effective pruning method.
@@ -157,7 +157,7 @@ As a result, a concise way to state the success of our system is that it was abl
   \begin{center}
     \begin{tabular}{l l l l l l l l l l l l}
       \toprule
-      & \multicolumn{5}{c}{Synthesized MIDI} & &  \multicolumn{5}{c}{Piano roll} \\
+      & \multicolumn{5}{c}{(a) Synthesized MIDI} & &  \multicolumn{5}{c}{(b) Piano roll} \\
       \cmidrule{2-6}
       \cmidrule{8-12}
       \textbf{Rank} & 1 & 10 & 100 & 1000 & 10000 & & 1 & 10 & 100 & 1000 & 10000 \\
@@ -165,20 +165,32 @@ As a result, a concise way to state the success of our system is that it was abl
       \bottomrule
     \end{tabular}
   \end{center}
-  \caption{Percentage of MIDI/MSD pairs where the DTW distance ranked below each threshold, using the synthesized MIDI spectrogram or the MIDI piano roll as a representation.}
+  \caption{Percentage of MIDI/MSD pairs where the DTW distance ranked below each threshold, using (a) the synthesized MIDI spectrogram or (b) the MIDI piano roll as a representation.}
   \label{tab:rank-percentages}
 \end{table}
 
 \section{Shared Representations for Multimodal Sequences}
 \label{sec:multimodal}
 
-Piano roll matrices, 44.8 ms vs 22.2 s.
+Our proposed system is structured to learn mappings from two different modalities thanks to the fact that two separate networks $f$ and $g$ are trained.
+Despite this capability, in \cite{raffel2015large} we utilized a representation of MIDI files which is similar to the one used for audio recordings.
+One drawback of using the constant-Q spectra of the synthesized MIDI files as feature vectors is that the resulting feature extraction pipeline is inefficient; for a complex MIDI file it can take tens of seconds.
+In addition, utilizing this representation does not test the multimodal capabilities of our model.
 
-\subsection{MIDI to Audio Matching Experiment}
+We therefore repeated the experiment from \cite{raffel2015large} using a representation of MIDI data which is much more efficient to calculate and substantially different than the one used for audio files.
+Instead of synthesizing the MIDI file and computing a constant-Q spectrogram, we instead computed a beat-synchronous ``piano roll'' matrix directly from the MIDI data itself.
+A piano roll matrix $P$ is constructed such that $P[i, j] > 0$ denotes that note $i$ is playing on some instrument during the $j$th beat, and $P[i, j]$ is $0$ otherwise.
+An example piano roll matrix can be seen in Figure \ref{fig:sims_and_dtws}(b).
+Raw MIDI data can be readily converted to this format; for complex MIDI files, constructing such a matrix takes tens of milliseconds using \texttt{pretty\char`_midi}'s \texttt{get\char`_piano\char`_roll} and \texttt{get\char`_beats} functions \cite{raffel2014pretty_midi}.
+While the resulting representation is still a time-frequency matrix, it contains substantially less information (e.g.\ notes played on different instruments have the same representation) and is not directly comparable to the spectrograms we used for audio files.
 
-Re-cap of experiment
+For ease of comparison, we utilized the system outlined in Section \ref{sec:hashing} exactly except that we replaced the synthesized spectrograms with beat-synchronous piano roll matrices.
+After training on this representation, the hashing network achieved a Bhattacharyya coefficient of $0.538$ which indicates that the networks succesfully preserved similarity, although not as effectively as when spectrograms of synthesized MIDI files were used as a feature representation.
+The resulting hash sequences for the audio spectrogram shown in Figure \ref{fig:sims_and_dtws}(a) and the MIDI piano roll shown in \ref{fig:sims_and_dtws}(b) can be seen in Figure \ref{fig:sims_and_dtws}(c) and \ref{fig:sims_and_dtws}(d) respectively, which at a high-level appear much more similar than the original feature vector sequences.
 
-Results
+When evaluated on the task of matching our test set of MIDI files to the MSD, the model trained on piano roll matrices performed slightly worse than the system outlined in Section \ref{sec:hashing}, as can be seen in Table \ref{tab:rank-percentages}(b).
+In particular, only 92.8\% (vs. 95.9\%) of the correct MSD matches for the MIDI files in the test set ranked below 10,000 (1\% of the MSD).
+While this difference is significant, it nevertheless demonstrates that our system was able to learn an effective mapping despite the fact that the feature representations in each modality were substantially different.
 
 \section{Extensions}
 
