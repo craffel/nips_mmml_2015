@@ -53,11 +53,18 @@ Aligning the sequences before computing the total distance makes metrics of this
 For feature vectors which can be effectively compared with Euclidean distance (e.g.\ those with continuously-valued features), the most commonly used method of this type is dynamic time warping (DTW) \cite{sakoe1978dynamic}, which will be the focus of this work.
 
 The quadratic cost of the dynamic programming-based alignment operation can make nearest-neighbor search infeasible for databases with many entries and/or long sequences.
-Furthermore, traditional DTW involves computing the pairwise distance between all feature vectors in the two sequences being compared, which can outweigh the cost of the alignment for high-dimensional data.
+Furthermore, traditional DTW involves computing the pairwise distance between all feature vectors in the two sequences being compared, which can outweigh the cost of alignment for high-dimensional data.
 A common way to avoid these costs is to use ``pruning'' techniques, which use heuristics to skip a large portion of the database.
-A wide variety of pruning methods have been proposed; in \cite{rakthanmanon2012searching} it is shown that their successful application can enable nearest-neighbor search in databases with trillions of sequences.
+A wide variety of pruning methods have been proposed; \cite{rakthanmanon2012searching} gives an overview and shows that their successful application can enable nearest-neighbor search in databases with trillions of sequences.
 Despite their benefits, pruning methods typically rely on various constraints on the comparisons being made, such as the query sequence always being a subsequence of its correct match in the database and that the total number of aligned frames is fixed.
 Furthermore, these methods suffer losses in efficiency when sequences are oversampled and/or high dimensional.
+
+An alternative approach is to compute fixed-length embeddings of sequences and use Euclidean distance in the embedded space as a proxy for sequence similarity.
+For example, \cite{papapetrou2011embedding} computes an embedding as the DTW distance between each sequence and a small collection of ``reference'' sequences which are chosen to optimize retrieval quality.
+The resulting embeddings can provide state-of-the-art pruning both in terms of accuracy and speed, but rely on the same assumptions discussed in the previous paragraph.
+A different collection of embedding-based approaches are ``audio fingerprinting'' techniques \cite{wang2003industrial}, which seek to produce a single hash vector for a sequence which is invariant to noise and corruptions.
+These approaches have proven to be extremely effective for exact retrieval, but are ineffective in settings where the desired match for a query sequence differs substantially in content.
+As a result, ``soft fingerprinting'' methods have been proposed which are more flexible to differences in content \cite{van2015audio}, but their performance is meager compared to stricter fingerprinting methods.
 
 To avoid these issues, in \cite{raffel2015large} we proposed a learning-based method which utilizes a convolutional network to map sequences of feature vectors to downsampled sequences of binary vectors.
 The resulting ``hash sequences'' can be much more efficiently compared using dynamic time warping, which enables flexible, problem-adaptive pruning.
@@ -121,11 +128,12 @@ MIDI and audio analyses were performed with \texttt{pretty\char`_midi} \cite{raf
 
 In \cite{masci2014multimodal}, dense feed-forward neural networks are used for the learnable functions $f$ and $g$; we instead opted for convolutional networks due to the fact that sequential data tends to exhibit invariances over time which convolutional networks can learn to model with fewer parameters.
 In addition, by utilizing max-pooling layers to downsample over time, the resulting hash sequences can be made shorter, which makes computing the DTW distance quadratically faster.
-In our experiments, we used the same network structure for $f$ and $g$, which consisted of a convolutional network followed by a dense, fully-connected network.
+In our experiments, we used the same network structure for $f$ and $g$.
+Spectrograms were fed into a convolutional layer with sixteen $5 \times 12$ filters, followed by a $2\times2$ max-pooling layer, another convolutional layer with thirty two $3\times3$ filters, another $2\times2$ max-pooling layer, two dense layers with 2048 units, and a final dense output layer.
 Each layer in the network used a rectified linear unit (ReLU) nonlinearity except the last, which as in \cite{masci2014multimodal} used a $\tanh$ nonlinearity.
 This allows us to obtain binary hash vectors by testing whether each output dimension is greater or less than zero.
 We used an output dimensionality of 16 so that the resulting hash vectors could be represented as 16-bit unsigned integers.
-All weight matrices and filters were initialized using He's method \cite{he2015delving}, and all biases were initialized to zero.
+All weight matrices and filters were initialized using He et al.'s method \cite{he2015delving}, and all biases were initialized to zero.
 Our model was implemented using \texttt{theano} \cite{bastien2012theano,bergstra2010theano} and \texttt{lasagne} \cite{dieleman2015lasagne}.
 
 For training data, we assembled a collection of MIDI files which were determined to be high-quality transcriptions of corresponding audio recordings.
@@ -195,10 +203,11 @@ While this difference is significant, it nevertheless demonstrates that our syst
 \section{Future Work}
 
 In this paper, we have summarized the system proposed in \cite{raffel2015large} for mapping sequences of feature vectors to shorter sequences of hash vectors, and have shown that it is robust to multimodal problem settings.
-Given the success of this approach on the MIDI-to-audio recording matching experiment described in Section \ref{sec:hashing}, we are interested in applying it to other large-scale sequence retrieval tasks.
+Given the success of this approach on the MIDI-to-audio recording matching experiment described in Section \ref{sec:hashing}, we are interested in applying it to other large-scale cross-modality sequence retrieval tasks.
 One source of difficulty with using our system is that it requires a training set of matched and aligned sequences.
 We are currently investigating methods to relax this constraint by embedding sequences of feature vectors as fixed-length vectors in a common space where similarity is preserved.
 This approach will also replace the DTW-based comparison of hash sequences with a simple distance calculation, which could afford further efficiency gains.
+We are also interested in experimenting with larger Hamming space dimensionalities, which may increase accuracy at the cost of a higher memory requirement for the pre-computed binary vector distance table.
 For researchers interested in verifying and extending our results, all of the code used in these experiments is available online.\footnote{\href{https://github.com/craffel/midi-dataset}{\texttt{https://github.com/craffel/midi-dataset}}}
 
 \bibliographystyle{unsrt}
