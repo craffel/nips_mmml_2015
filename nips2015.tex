@@ -126,10 +126,18 @@ MIDI and audio analyses were performed with \texttt{pretty\char`_midi} \cite{raf
   \label{fig:sims_and_dtws}
 \end{figure}
 
+\begin{figure}
+  \centering
+  \includegraphics[width=.8\textwidth]{network.pdf}
+  \caption{The network structure used in our experiments.
+  A spectrogram is fed into a convolutional layer with sixteen $5 \times 12$ filters, followed by a $2\times2$ max-pooling layer, another convolutional layer with thirty-two $3\times3$ filters, another $2\times2$ max-pooling layer, two dense layers with 2048 units, and a final dense output layer.
+  The dimensionality of each intermediate representation is displayed at each layer in the network.}
+  \label{fig:network}
+\end{figure}
+
 In \cite{masci2014multimodal}, dense feed-forward neural networks are used for the learnable functions $f$ and $g$; we instead opted for convolutional networks due to the fact that sequential data tends to exhibit invariances over time which convolutional networks can learn to model with fewer parameters.
 In addition, by utilizing max-pooling layers to downsample over time, the resulting hash sequences can be made shorter, which makes computing the DTW distance quadratically faster.
-In our experiments, we used the same network structure for $f$ and $g$.
-Spectrograms were fed into a convolutional layer with sixteen $5 \times 12$ filters, followed by a $2\times2$ max-pooling layer, another convolutional layer with thirty two $3\times3$ filters, another $2\times2$ max-pooling layer, two dense layers with 2048 units, and a final dense output layer.
+In our experiments, we used the same network structure for $f$ and $g$, which is displayed in Figure \ref{fig:network}.
 Each layer in the network used a rectified linear unit (ReLU) nonlinearity except the last, which as in \cite{masci2014multimodal} used a $\tanh$ nonlinearity.
 This allows us to obtain binary hash vectors by testing whether each output dimension is greater or less than zero.
 We used an output dimensionality of 16 so that the resulting hash vectors could be represented as 16-bit unsigned integers.
