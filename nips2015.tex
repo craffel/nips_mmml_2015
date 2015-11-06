@@ -10,6 +10,14 @@
 
 %\documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
 
+\let\OLDthebibliography\thebibliography
+\renewcommand\thebibliography[1]{
+  \OLDthebibliography{#1}
+  \setlength{\parskip}{1pt}
+  \setlength{\itemsep}{1pt}
+}
+
+
 \title{Accelerating Multimodal Sequence Retrieval with Convolutional Networks}
 
 
@@ -53,7 +61,7 @@ Aligning the sequences before computing the total distance makes metrics of this
 For feature vectors which can be effectively compared with Euclidean distance (e.g.\ those with continuously-valued features), the most commonly used method of this type is dynamic time warping (DTW) \cite{sakoe1978dynamic}, which will be the focus of this work.
 
 The quadratic cost of the dynamic programming-based alignment operation can make nearest-neighbor search infeasible for databases with many entries and/or long sequences.
-Furthermore, traditional DTW involves computing the pairwise distance between all feature vectors in the two sequences being compared, which can outweigh the cost of alignment for high-dimensional data.
+Furthermore, traditional DTW involves computing the pairwise distance between all feature vectors in the two sequences being compared, which can outweigh the cost of dynamic programming for high-dimensional data.
 A common way to avoid these costs is to use ``pruning'' techniques, which use heuristics to skip a large portion of the database.
 A wide variety of pruning methods have been proposed; \cite{rakthanmanon2012searching} gives an overview and shows that their successful application can enable nearest-neighbor search in databases with trillions of sequences.
 Despite their benefits, pruning methods typically rely on various constraints on the comparisons being made, such as the query sequence always being a subsequence of its correct match in the database and that the total number of aligned frames is fixed.
@@ -131,7 +139,8 @@ MIDI and audio analyses were performed with \texttt{pretty\char`_midi} \cite{raf
   \includegraphics[width=.8\textwidth]{network.pdf}
   \caption{The network structure used in our experiments.
   A spectrogram is fed into a convolutional layer with sixteen $5 \times 12$ filters, followed by a $2\times2$ max-pooling layer, another convolutional layer with thirty-two $3\times3$ filters, another $2\times2$ max-pooling layer, two dense layers with 2048 units, and a final dense output layer.
-  The dimensionality of each intermediate representation is displayed at each layer in the network.}
+  The dimensionality of each intermediate representation is displayed at each layer in the network.
+  All convolutions included zero-padding so that the input dimensionality was retained after convolution.}
   \label{fig:network}
 \end{figure}
 
@@ -201,7 +210,7 @@ Raw MIDI data can be readily converted to this format; for complex MIDI files, c
 While the resulting representation is still a time-frequency matrix, it contains substantially less information (e.g.\ notes played on different instruments have the same representation) and is not directly comparable to the spectrograms we used for audio files.
 
 For ease of comparison, we utilized the exact same system as outlined in Section \ref{sec:hashing} except that we replaced the spectrograms of synthesized renditions with beat-synchronous piano roll matrices.
-After training on this representation, the hashing network achieved a Bhattacharyya coefficient of $0.538$ which indicates that the networks succesfully preserved similarity, although not as effectively as when spectrograms of synthesized MIDI files were used as a feature representation.
+After training on this representation, the hashing network achieved a Bhattacharyya coefficient of $0.538$ which indicates that the networks successfully preserved similarity, although not as effectively as when spectrograms of synthesized MIDI files were used as a feature representation.
 The resulting hash sequences for the audio spectrogram shown in Figure \ref{fig:sims_and_dtws}(a) and the MIDI piano roll shown in \ref{fig:sims_and_dtws}(b) can be seen in Figure \ref{fig:sims_and_dtws}(c) and \ref{fig:sims_and_dtws}(d) respectively, which at a high level appear much more similar than the original feature vector sequences.
 
 When evaluated on the task of matching our test set of MIDI files to the MSD, the model trained on piano roll matrices performed slightly worse than the system outlined in Section \ref{sec:hashing}, as can be seen in Table \ref{tab:rank-percentages}(b).
@@ -211,11 +220,11 @@ While this difference is significant, it nevertheless demonstrates that our syst
 \section{Future Work}
 
 In this paper, we have summarized the system proposed in \cite{raffel2015large} for mapping sequences of feature vectors to shorter sequences of hash vectors, and have shown that it is robust to multimodal problem settings.
-Given the success of this approach on the MIDI-to-audio recording matching experiment described in Section \ref{sec:hashing}, we are interested in applying it to other large-scale cross-modality sequence retrieval tasks.
+Given the success of this approach on our MIDI-to-audio recording matching experiment, we are interested in applying it to other large-scale cross-modality sequence retrieval tasks.
 One source of difficulty with using our system is that it requires a training set of matched and aligned sequences.
 We are currently investigating methods to relax this constraint by embedding sequences of feature vectors as fixed-length vectors in a common space where similarity is preserved.
 This approach will also replace the DTW-based comparison of hash sequences with a simple distance calculation, which could afford further efficiency gains.
-We are also interested in experimenting with larger Hamming space dimensionalities, which may increase accuracy at the cost of a higher memory requirement for the pre-computed binary vector distance table.
+We are also interested in experimenting with larger Hamming space dimensionalities, which may increase accuracy at the cost of a higher memory requirement for the precomputed binary vector distance table.
 For researchers interested in verifying and extending our results, all of the code used in these experiments is available online.\footnote{\href{https://github.com/craffel/midi-dataset}{\texttt{https://github.com/craffel/midi-dataset}}}
 
 \bibliographystyle{unsrt}
