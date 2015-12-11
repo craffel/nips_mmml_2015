@@ -46,7 +46,7 @@ New York, NY 10027\\
 
 \begin{abstract}
 Given a large database of sequential data, a natural problem is to find the entry in the database which is most similar to a query sequence.
-Warping-based similarity metrics such as the dynamic time warping (DTW) distance can be prohibitively expensive when the sequences are long and/or high-dimensional.
+Warping-based similarity measures such as the dynamic time warping (DTW) distance can be prohibitively expensive when the sequences are long and/or high-dimensional.
 To mitigate these issues, \cite{raffel2015large} utilizes a convolutional network to map sequences of feature vectors to downsampled sequences of binary vectors.
 On the task of matching synthetic renditions of pieces of music to a large database of audio recordings of songs, this approach was able to efficiently discard 99\% of the database with high confidence.
 We extend this approach to the multimodal setting where rather than synthetic renditions, a matrix representation of the piece's score is used, demonstrating that this approach is adaptable to the changes in the underlying representation.
@@ -55,9 +55,9 @@ We extend this approach to the multimodal setting where rather than synthetic re
 \section{Introduction}
 \label{sec:intro}
 
-The ability to compute a similarity metric for sequences of feature vectors is necessary for the task of retrieving the most similar entry (nearest-neighbor search) in a database of sequences.
+The ability to compute a similarity score for sequences of feature vectors is necessary for the task of retrieving the most similar entry (nearest-neighbor search) in a database of sequences.
 A natural way to compare sequences is to first find their optimal alignment and then compute the total distance between aligned feature vectors.
-Aligning the sequences before computing the total distance makes metrics of this type robust to timing distortions (e.g.\ offset, skew, or cropping), and can be achieved in quadratic time using dynamic programming \cite{rakthanmanon2012searching}.
+Aligning the sequences before computing the total distance makes measures of this type robust to timing distortions (e.g.\ offset, skew, or cropping), and can be achieved in quadratic time using dynamic programming \cite{rakthanmanon2012searching}.
 For feature vectors which can be effectively compared with Euclidean distance (e.g.\ those with continuously-valued features), the most commonly used method of this type is dynamic time warping (DTW) \cite{sakoe1978dynamic}, which will be the focus of this work.
 
 The quadratic cost of the dynamic programming-based alignment operation can make nearest-neighbor search infeasible for databases with many entries and/or long sequences.
