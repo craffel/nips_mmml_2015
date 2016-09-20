@@ -101,7 +101,7 @@ We then construct $\mathcal{N}$, a set of ``dissimilar'' pairs, by repeatedly ra
 Given this training data, our goal is to map feature vectors to a Hamming space where pairs in $\mathcal{P}$ have a small distance and pairs in $\mathcal{N}$ have a large distance.
 Motivated by the multimodal hashing technique of \cite{masci2014multimodal}, we use the following objective function to measure the quality of the mapping:
 \begin{equation*}
-\mathcal{L} = \frac{1}{|\mathcal{P}|} \sum_{(x, y) \in \mathcal{P}} \| f(x) - g(y) \|_2^2  - \frac{\alpha}{|\mathcal{N}|} \sum_{(a, b) \in \mathcal{N}} \max(0, m - \|f(a) - g(b) \|_2)^2
+\mathcal{L} = \frac{1}{|\mathcal{P}|} \sum_{(x, y) \in \mathcal{P}} \| f(x) - g(y) \|_2^2 + \frac{\alpha}{|\mathcal{N}|} \sum_{(a, b) \in \mathcal{N}} \max(0, m - \|f(a) - g(b) \|_2)^2
 \end{equation*}
 where $f$ and $g$ are learned nonlinear functions, $\alpha$ is a parameter to control the importance of separating dissimilar items, and $m$ is a target separation of dissimilar pairs.
 As long as $f$ and $g$ are differentiable functions, this system can be optimized by using gradient descent to adjust the parameters of $f$ and $g$ such that $\mathcal{L}$ is minimized.
@@ -118,7 +118,7 @@ We tested the effectiveness of this approach on the task of matching synthetical
 For the first modality, synthetic recordings of music were obtained by using the \texttt{fluidsynth} program to synthesize musical scores in the form of MIDI files, a widely used format for transcribing music.
 For the second, we used audio recordings from the Million Song Dataset (MSD) \cite{bertin2011million,schindler2012facilitating}.
 The goal was therefore to efficiently match a synthetic rendition to its original recording among the million recordings in the MSD.
-For both modalities, we used feature vectors of log-magnitude, constant-Q (i.e.\ log-frequency) spectra with 48 frequency bins from 130 to 1047 Hz.
+For both modalities, we used feature vectors of log-magnitude, constant-Q (i.e.\ log-frequency) spectra with 48 frequency bins from 65 to 1047 Hz.
 To normalize differences in tempo, we estimated beat locations and computed spectrograms (sequences of spectra) on a timescale where each spectrum corresponded to the span of an estimated beat.
 An example of this representation can be seen in Figure \ref{fig:sims_and_dtws}(a).
 MIDI and audio analyses were performed with \texttt{pretty\char`_midi} \cite{raffel2014pretty_midi} and \texttt{librosa} \cite{mcfee2015librosa,mcfee2015librosa_scipy} respectively.
